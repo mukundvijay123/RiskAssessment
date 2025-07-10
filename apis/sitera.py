@@ -3,9 +3,9 @@ import json
 import os
 from fastapi.responses import JSONResponse
 
-router = APIRouter(prefix="/siteRiskAssessment")
+siterouter = APIRouter(prefix="/siteRiskAssessment")
 
-@router.get("/questions")
+@siterouter.get("/questions")
 def get_questions():
     file_path = os.path.join(os.path.dirname(__file__), "questions.json")
     try:

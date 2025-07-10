@@ -1,7 +1,12 @@
 from fastapi import FastAPI
+from apis.sitera import siterouter
+from apis.processra import processrouter
 
-app = FastAPI("Risk Assessment")
+app = FastAPI(title="Risk Assessment")
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+# Include the router
+app.include_router(siterouter)
+app.include_router(processrouter)
+
+
+
