@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field , Optional
+from typing import List
 
 class ProcessRiskInput(BaseModel):
     process_name: str = Field(..., alias="processName")
@@ -13,3 +14,27 @@ class ProcessRiskInput(BaseModel):
 
     class Config:
         validate_by_name= False
+
+class RiskItem(BaseModel):
+    enablerType: str
+    enablerDomain: str
+    majorCategory: str
+    mappedThreat: str
+    existingControls: str
+    complianceStatus: str
+    impact: str
+    likelihood: str
+    riskValue: str
+
+class MitigationResponse(BaseModel):
+    revisedImpact: int
+    revisedLikelihood: int
+    revisedRiskValue: int
+    mitigationPlan: str
+    ownership: str
+
+class RiskMitigationResponse(BaseModel):
+    mitigatedRisks: List[MitigationResponse]
+
+
+

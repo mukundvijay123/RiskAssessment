@@ -18,7 +18,7 @@ def extract_process_info(data: ProcessRiskInput):
 
     # Call threat assessment API
     response = requests.post(
-        "https://ey-catalyst-rvce.hf.space/bia/threat-assessment",
+        "https://ey-catalyst-rvce.hf.space/bia/threat-assessment/api/generate-threats",
         json={"message": paragraph}
     )
 
