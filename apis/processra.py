@@ -6,6 +6,7 @@ processrouter = APIRouter(prefix="/processRiskAssessment")
 
 @processrouter.post("/getThreats")
 def extract_process_info(data: ProcessRiskInput):
+    print("called")
     # Construct message string for threat analysis
     paragraph = (
         f"This process is conducted in {data.place}. "

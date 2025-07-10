@@ -1,12 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class ProcessRiskInput(BaseModel):
-    processName: str
+    process_name: str = Field(..., alias="processName")
     department: str
     description: str
-    buissnessContext:str
-    owner: str
+    business_context: str = Field(..., alias="buissnessContext")
+    process_owner: str = Field(..., alias="owner")
     place: str
     rto: str
     mtpd: str
-    minTolerableDowntime:str
+    min_tolerable_downtime: str = Field(..., alias="minTolerableDowntime")
+
+    class Config:
+        validate_by_name= False
