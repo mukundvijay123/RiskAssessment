@@ -37,8 +37,8 @@ def generate_risk_mitigation(risk_items: List[RiskItem]):
 
     # Call external threat assessment API
     response = requests.post(
-        "https://ey-catalyst-rvce.hf.space/bia/threat-assessment/api/risk-mitigation",
-        json={"message": combined_paragraph}
+        "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/risk-mitigation",
+        json=[item.model_dump(by_alias=True) for item in risk_items]
     )
 
     if response.status_code != 200:
