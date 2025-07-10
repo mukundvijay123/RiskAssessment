@@ -4,7 +4,7 @@ from .models import ProcessRiskInput  # or wherever your class is defined
 
 processrouter = APIRouter(prefix="/processRiskAssessment")
 
-@processrouter.post("/")
+@processrouter.post("/getThreats")
 def extract_process_info(data: ProcessRiskInput):
     # Construct message string for threat analysis
     paragraph = (
@@ -25,15 +25,4 @@ def extract_process_info(data: ProcessRiskInput):
         return {"error": "Failed to get threat assessment", "details": response.text}
 
     # Combine input + threat result
-    return {
-        "process_info": {
-            "process_name": data.process_name,
-            "department": data.department,
-            "description": data.description,
-            "process_owner": data.process_owner,
-            "place": data.place,
-            "rto": data.rto,
-            "mtpd": data.mtpd
-        },
-        "threat_assessment": response.json()
-    }
+    return response.json()
