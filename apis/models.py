@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field , Optional
+from pydantic import BaseModel, Field 
 from typing import List
 
 class ProcessRiskInput(BaseModel):
     process_name: str = Field(..., alias="processName")
     department: str
     description: str
-    business_context: str = Field(..., alias="buissnessContext")
+    business_context: str = Field(..., alias="businessContext")
     process_owner: str = Field(..., alias="owner")
     place: str
     rto: str

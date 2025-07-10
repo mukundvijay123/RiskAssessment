@@ -3,7 +3,7 @@ import json
 import os
 from fastapi.responses import JSONResponse
 from typing import List
-from models import RiskItem,RiskMitigationResponse
+from .models import RiskItem,RiskMitigationResponse
 import requests
 siterouter = APIRouter(prefix="/siteRiskAssessment")
 
@@ -37,7 +37,7 @@ def generate_risk_mitigation(risk_items: List[RiskItem]):
 
     # Call external threat assessment API
     response = requests.post(
-        "https://ey-catalyst-rvce.hf.space/bia/threat-assessment/api/generate-threats",
+        "https://ey-catalyst-rvce.hf.space/bia/threat-assessment/api/risk-mitigation",
         json={"message": combined_paragraph}
     )
 

@@ -6,7 +6,7 @@ processrouter = APIRouter(prefix="/processRiskAssessment")
 
 @processrouter.post("/getThreats")
 def extract_process_info(data: ProcessRiskInput):
-    # Construct message string for threat analysis
+    # Optional: Generate paragraph for logging or UI
     paragraph = (
         f"This process is conducted in {data.place}. "
         f"The process '{data.process_name}' belongs to the '{data.department}' department. "
@@ -14,15 +14,23 @@ def extract_process_info(data: ProcessRiskInput):
         f"It is managed by {data.process_owner}. "
         f"The RTO is {data.rto} and the MTPD is {data.mtpd}."
     )
-
-    # Call threat assessment API
-    response = requests.post(
-        "https://ey-catalyst-rvce.hf.space/bia/threat-assessment/api/generate-threats",
-        json={"message": paragraph}
-    )
+    print("Generated paragraph:\n", paragraph)
+    print(data)
+    # Send entire data object to Hugging Face API with correct aliasing
+    try:
+        response = requests.post(
+            "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/generate-threats",
+            json=data.model_dump(by_alias=True),
+            timeout=30
+        )
+    except Exception as e:
+        return {"error": "Failed to call threat assessment API", "details": str(e)}
 
     if response.status_code != 200:
-        return {"error": "Failed to get threat assessment", "details": response.text}
+        return {
+            "error": "Failed to get threat assessment",
+            "status_code": response.status_code,
+            "details": response.text
+        }
 
-    # Combine input + threat result
     return response.json()
