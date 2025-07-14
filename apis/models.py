@@ -15,6 +15,17 @@ class ProcessRiskInput(BaseModel):
     class Config:
         validate_by_name= False
 
+
+class RiskQuestion(BaseModel):
+    category: str
+    question: str
+    user_answer: str
+
+class RiskRequestModel(BaseModel):
+    responses: List[RiskQuestion]
+
+
+'''
 class RiskItem(BaseModel):
     enablerType: str
     enablerDomain: str
@@ -35,6 +46,4 @@ class MitigationResponse(BaseModel):
 
 class RiskMitigationResponse(BaseModel):
     mitigatedRisks: List[MitigationResponse]
-
-
-
+'''

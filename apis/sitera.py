@@ -3,7 +3,7 @@ import json
 import os
 from fastapi.responses import JSONResponse
 from typing import List
-from .models import RiskItem,RiskMitigationResponse
+from .models import RiskRequestModel
 import requests
 siterouter = APIRouter(prefix="/siteRiskAssessment")
 
@@ -19,29 +19,16 @@ def get_questions():
     
 
 @siterouter.post("/riskMitigation")
-def generate_risk_mitigation(risk_items: List[RiskItem]):
-    paragraphs = []
+def generate_risk_mitigation(risk_items: RiskRequestModel):
 
-    for idx, item in enumerate(risk_items, 1):
-        para = (
-            f"Risk {idx}: The enabler type '{item.enablerType}' in the domain '{item.enablerDomain}' "
-            f"under the major category '{item.majorCategory}' is mapped to the threat '{item.mappedThreat}'. "
-            f"Existing controls include: {item.existingControls}. "
-            f"Compliance status is '{item.complianceStatus}'. "
-            f"The impact is rated as '{item.impact}', with a likelihood of '{item.likelihood}', "
-            f"resulting in an overall risk value of '{item.riskValue}'."
-        )
-        paragraphs.append(para)
 
-        combined_paragraph = "\n\n".join(paragraphs)
 
-    # Call external threat assessment API
     response = requests.post(
         "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/risk-mitigation",
-        json=[item.model_dump(by_alias=True) for item in risk_items]
+        json=risk_items.model_dump(by_alias=True)
     )
-
-    if response.status_code != 200:
+    a=response.status_code
+    if a != 200:
         return {
             "error": "Failed to get threat mitigation response",
             "status_code": response.status_code,
