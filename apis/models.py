@@ -42,6 +42,12 @@ class CriticalProcessInfo(BaseModel):
     class Config:
         orm_mode = True
 
+class ProcessInput(BaseModel):
+    process_id: UUID
+    process_name: str
+    process_owner: Optional[str]
+    description: Optional[str]
+
 '''
 class RiskItem(BaseModel):
     enablerType: str
