@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field 
-from typing import List
+from typing import List,Optional
+from uuid import UUID
+from datetime import datetime
 
 class ProcessRiskInput(BaseModel):
     process_name: str = Field(..., alias="processName")
@@ -24,6 +26,21 @@ class RiskQuestion(BaseModel):
 class RiskRequestModel(BaseModel):
     responses: List[RiskQuestion]
 
+
+class CriticalProcessInfo(BaseModel):
+    process_id: UUID
+    process_name: str
+    process_owner: Optional[str]
+    subdepartment_id: Optional[UUID]
+    bia_process_info_id: UUID
+    description: Optional[str]
+    critical: bool
+    review_status: str
+    bia_created_at: datetime
+    bia_updated_at: datetime
+
+    class Config:
+        orm_mode = True
 
 '''
 class RiskItem(BaseModel):
