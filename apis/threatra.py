@@ -31,7 +31,7 @@ def generate_threat_risks(request: ThreatRiskGenerationRequest, db: Session = De
     }
     try:
         response=requests.post(
-                "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/threat-ra/generate-threat-risks",  # Replace with actual host/port
+                "https://ey-catalyst-rvce-ey-catalyst.hf.space/threat/api/threat-ra/generate-threat-risks",  # Replace with actual host/port
                 json=payload,
                 timeout=30  # optional
         )
