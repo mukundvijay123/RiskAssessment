@@ -3,6 +3,8 @@ from fastapi.routing import APIRoute
 from apis.sitera import siterouter
 from apis.processra import processrouter
 from apis.enterprisera import enterpriserouter
+from apis.threatra import threatrouter  
+from apis.dashboard import dashboardrouter
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="Risk Assessment")
 
@@ -30,6 +32,8 @@ async def startup_event():
 app.include_router(siterouter)
 app.include_router(processrouter)
 app.include_router(enterpriserouter)
+app.include_router(threatrouter)
+app.include_router(dashboardrouter)
 
 @app.get("/ping")
 def ping():

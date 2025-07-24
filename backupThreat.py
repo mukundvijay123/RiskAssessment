@@ -5,72 +5,25 @@ from datetime import datetime
 
 
 '''
-Models for threat RA
-'''
-
-class ThreatRiskModel(BaseModel):
-    id: str
-    domain: str
-    riskName: str
-    threat: str
-    vulnerability: str
-    category: str
-    likelihood: int
-    impact: int
-    rating: int
-    likelihood_justification: str
-    impact_justification: str
-    threat_justification: str
-    vulnerability_justification: str
-
-class ThreatRiskGenerationRequest(BaseModel):
-    id:UUID
-    domain: str
-    category: str
-    business_context: Optional[str] = ""
-    specific_focus: Optional[str] = ""
-    number_of_records: Optional[int] = 10
-
-class ThreatRiskGenerationResponse(BaseModel):
-    success: bool
-    threatRisks: List[ThreatRiskModel]
-    message: str
-
-
-
-class ThreatRiskUpdate(BaseModel):
-    domain: str
-    riskName: str
-    threat: str
-    vulnerability: str
-    category: str
-    likelihood: int
-    impact: int
-    rating: int
-
-
-
-'''
 Models for enterprise RA
 '''
 
-class EntRiskAssessmentRequest(BaseModel):
-    organization_id: UUID
+# Request Models
+class RiskGenerationRequest(BaseModel):
     category: str
     department: str
     business_context: Optional[str] = ""
     specific_concerns: Optional[str] = ""
     number_of_risks: Optional[int] = 5
 
-
-class EntRiskGenerationRequest(BaseModel):
+class ThreatGenerationRequest(BaseModel):
+    risk_name: str
     category: str
     department: str
-    business_context: Optional[str] = ""
-    specific_concerns: Optional[str] = ""
-    number_of_risks: Optional[int] = 5
+    number_of_threats: Optional[int] = 3
 
-class EntThreatModel(BaseModel):
+# Response Models
+class Threat(BaseModel):
     id: Optional[int]  # Optional if the DB generates it (SERIAL)
     risk_id: int       # Foreign key to risks.id
     name: str
@@ -81,7 +34,7 @@ class EntThreatModel(BaseModel):
         orm_mode = True
 
 
-class EntRiskModel(BaseModel):
+class Risk(BaseModel):
     id: Optional[int]  # SERIAL PK
     organization_id: str  # UUID from organization table
     category: str
@@ -94,31 +47,29 @@ class EntRiskModel(BaseModel):
     treatment: str
     department: str
     escalated: bool
-    threats: List[EntThreatModel]
+    threats: List[Threat]
 
 
-class EntRiskUpdate(BaseModel):
+class RiskUpdate(BaseModel):
     name: Optional[str]
     description: Optional[str]
     likelihood: Optional[int]
     impact: Optional[int]
-    likelihood_justification: Optional[str]
-    impact_justification: Optional[str]
     treatment: Optional[str]
     department: Optional[str]
-    escalated: Optional[bool]
 
-    class Config:
-        orm_mode = True
 
-class EntRiskGenerationResponse(BaseModel):
+
+class RiskGenerationResponse(BaseModel):
     success: bool
-    risks: List[EntRiskModel]
+    risks: List[Risk]
     message: str
 
+class ThreatGenerationResponse(BaseModel):
+    success: bool
+    threats: List[Threat]
+    message: str
 
-class EntRiskEscalationRequest(BaseModel):
-    escalated: bool
 
 '''
 Models for site RA
