@@ -13,8 +13,7 @@ enterpriserouter = APIRouter(prefix="/enterpriseRiskAssessment")
 
 @enterpriserouter.post("/generateRisks")
 def generate_risks(request: EntRiskAssessmentRequest, db: Session = Depends(get_db)):
-    
-    # Convert RiskAssessmentRequest to RiskGenerationRequest
+    # Convert to generation request
     risk_gen_req = EntRiskGenerationRequest(
         category=request.category,
         department=request.department,
@@ -26,18 +25,19 @@ def generate_risks(request: EntRiskAssessmentRequest, db: Session = Depends(get_
     try:
         # External API call to generate risks
         response = requests.post(
-            "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/enterprise-ra/generate-risks",
-            json=risk_gen_req.dict()
+            "https://ey-catalyst-rvce-ey-catalyst.hf.space/enterprise/api/enterprise-ra/generate-risks",
+            json=risk_gen_req.model_dump()
         )
         response.raise_for_status()
         data = response.json()
 
         if not data.get("success") or "risks" not in data:
             raise HTTPException(status_code=500, detail="Invalid risk generation response")
-        
+
         generated_risks = []
+
         for risk_item in data["risks"]:
-            # Save to DB
+            # Create and save EntRisk
             db_risk = EntRisk(
                 organization_id=request.organization_id,
                 category=request.category,
@@ -52,8 +52,9 @@ def generate_risks(request: EntRiskAssessmentRequest, db: Session = Depends(get_
                 escalated=False
             )
             db.add(db_risk)
-            db.flush()
-        
+            db.flush()  # get the ID
+
+            # Create and save EntThreats
             for threat_item in risk_item.get("threats", []):
                 db_threat = EntThreat(
                     risk_id=db_risk.id,
@@ -63,42 +64,23 @@ def generate_risks(request: EntRiskAssessmentRequest, db: Session = Depends(get_
                 )
                 db.add(db_threat)
 
-        
-        generated_risks.append(
-                EntRisk(
-                    id=str(db_risk.id),
-                    category=db_risk.category,
-                    name=db_risk.name,
-                    description=db_risk.description,
-                    likelihood=db_risk.likelihood,
-                    impact=db_risk.impact,
-                    likelihood_justification=db_risk.likelihood_justification,
-                    impact_justification=db_risk.impact_justification,
-                    treatment=db_risk.treatment,
-                    department=db_risk.department,
-                    escalated=db_risk.escalated,
-                    threats=[
-                        EntThreat(**threat) for threat in risk_item.get("threats", [])
-                    ]
-                )
-            )
+            db.refresh(db_risk)  # load threats via relationship
+            generated_risks.append(EntRiskModel.model_validate(db_risk))
 
         db.commit()
+
         return EntRiskGenerationResponse(
             success=True,
             risks=generated_risks,
             message=f"Successfully generated and saved {len(generated_risks)} risks"
         )
 
-
     except requests.RequestException as e:
-            raise HTTPException(status_code=502, detail=f"External API error: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"External API error: {str(e)}")
 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
-
-
 
 
 

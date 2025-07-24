@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field 
+from pydantic import BaseModel, Field ,ConfigDict
 from typing import List,Optional
 from uuid import UUID
 from datetime import datetime
@@ -83,7 +83,7 @@ class EntThreatModel(BaseModel):
 
 class EntRiskModel(BaseModel):
     id: Optional[int]  # SERIAL PK
-    organization_id: str  # UUID from organization table
+    organization_id: UUID  # UUID from organization table
     category: str
     name: str
     description: str
@@ -95,6 +95,7 @@ class EntRiskModel(BaseModel):
     department: str
     escalated: bool
     threats: List[EntThreatModel]
+    model_config = ConfigDict(from_attributes=True)  
 
 
 class EntRiskUpdate(BaseModel):
@@ -108,8 +109,8 @@ class EntRiskUpdate(BaseModel):
     department: Optional[str]
     escalated: Optional[bool]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class EntRiskGenerationResponse(BaseModel):
     success: bool
