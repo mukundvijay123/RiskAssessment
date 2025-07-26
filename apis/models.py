@@ -135,6 +135,68 @@ class RiskQuestion(BaseModel):
 class RiskRequestModel(BaseModel):
     responses: List[RiskQuestion]
 
+class SiteRiskSafetyInput(BaseModel):
+    riskCategory: str
+    controlQuestion: str
+    complianceStatus: str
+    address_of_location: str
+    nature_of_occupancy: str
+    building_construction_details: str
+    nature_of_other_occupancies: str
+    total_floors_and_communication: str
+    total_floor_area: str
+    maximum_undivided_area: str
+    floors_occupied: str
+    building_age: str
+    stability_certificate: str
+    fire_noc_availability: str
+    people_working_floor_wise: str
+    max_visitors_peak_day: str
+    business_hours: str
+    power_backup_details: str
+    store_room_stacking: str
+    floor_covering_nature: str
+    false_ceiling_details: str
+    hvac_system_details: str
+    area_passage_around_building: str
+
+class RiskTrends(BaseModel):
+    top_category: str
+    risk_severity: str
+    observations: List[str]
+
+
+
+class SiteDetails(BaseModel):
+    site_name: str
+    address: str
+    building_type: str
+    floor_area_sq_ft: int
+    occupancy_type: str
+    year_of_construction: int
+    no_of_floors: int
+
+class GeneratedRiskOutput(BaseModel):
+    risk_id: str
+    category: str
+    business_unit: str
+    risk_owner: str
+    timeline: str
+    risk_name: str
+    question: str
+    compliance_status: str
+    identified_threat: str
+    likelihood: int
+    impact: int
+    risk_value: int
+    residual_risk: str
+    current_control_description: str
+    current_control_rating: str
+    mitigation_plan: str
+    site_details: SiteDetails
+    risk_classification_summary: str
+    mitigation_suggestions: List[str]
+    risk_trends: RiskTrends
 
 
 

@@ -1,9 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 import json
 import os
 from fastapi.responses import JSONResponse
 from typing import List
-from .models import RiskRequestModel
+from .models import RiskRequestModel,SiteRiskSafetyInput,GeneratedRiskOutput
 import requests
 siterouter = APIRouter(prefix="/siteRiskAssessment")
 
@@ -37,4 +37,31 @@ def generate_risk_mitigation(risk_items: RiskRequestModel):
 
     return response.json()
 
-        
+
+@siterouter.post("/site-risk-assessment")
+def do_sam(input: SiteRiskSafetyInput):
+    """
+    Sends site risk safety input to external risk mitigation API and returns the response.
+    """
+    try:
+        response = requests.post(
+            "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/site-risk-mitigation",
+            json=input.model_dump(by_alias=True),
+            timeout=30
+        )
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Error connecting to mitigation API: {str(e)}")
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail={
+                "error": "Failed to get threat mitigation response",
+                "response": response.text
+            }
+        )
+
+    try:
+        return response.json()
+    except ValueError:
+        raise HTTPException(status_code=500, detail="Invalid JSON received from external API")
