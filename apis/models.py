@@ -9,7 +9,8 @@ Models for threat RA
 '''
 
 class ThreatRiskModel(BaseModel):
-    id: str
+    id: Optional[int]
+    organization_id:UUID
     domain: str
     riskName: str
     threat: str
@@ -22,9 +23,11 @@ class ThreatRiskModel(BaseModel):
     impact_justification: str
     threat_justification: str
     vulnerability_justification: str
+    class Config:
+        from_attributes = True 
 
 class ThreatRiskGenerationRequest(BaseModel):
-    id:UUID
+    organization_id:UUID
     domain: str
     category: str
     business_context: Optional[str] = ""

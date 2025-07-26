@@ -35,6 +35,7 @@ def generate_threat_risks(request: ThreatRiskGenerationRequest, db: Session = De
                 json=payload,
                 timeout=30  # optional
         )
+        print(response.status_code)
 
         if response.status_code != 200:
             raise HTTPException(status_code=502, detail="LLM API error")
@@ -46,25 +47,25 @@ def generate_threat_risks(request: ThreatRiskGenerationRequest, db: Session = De
         
         saved_risks = []
         for risk in data["threatRisks"]:
-            for risk in data["threatRisks"]:
-                db_obj = ThreatRisk(
-                    id=risk["id"],
-                    organization_id=request.organization_id,
-                    domain=risk["domain"],
-                    riskName=risk["riskName"],
-                    threat=risk["threat"],
-                    vulnerability=risk["vulnerability"],
-                    category=risk["category"],
-                    likelihood=risk["likelihood"],
-                    impact=risk["impact"],
-                    rating=risk["rating"],
-                    likelihood_justification=risk["likelihood_justification"],
-                    impact_justification=risk["impact_justification"],
-                    threat_justification=risk["threat_justification"],
-                    vulnerability_justification=risk["vulnerability_justification"]
-                )
-                db.add(db_obj)
-                saved_risks.append(db_obj)
+            db_obj = ThreatRisk(
+                organization_id=request.organization_id,
+                domain=risk["domain"],
+                riskName=risk["riskName"],
+                threat=risk["threat"],
+                vulnerability=risk["vulnerability"],
+                category=risk["category"],
+                likelihood=risk["likelihood"],
+                impact=risk["impact"],
+                rating=risk["rating"],
+                likelihood_justification=risk["likelihood_justification"],
+                impact_justification=risk["impact_justification"],
+                threat_justification=risk["threat_justification"],
+                vulnerability_justification=risk["vulnerability_justification"]
+            )
+            db.add(db_obj)
+            saved_risks.append(db_obj)
+
+        pydantic_risks = [ThreatRiskModel.from_orm(obj) for obj in saved_risks]
 
         db.commit()
         return ThreatRiskGenerationResponse(

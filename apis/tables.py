@@ -71,7 +71,7 @@ class EntThreat(Base):
 class ThreatRisk(Base):
     __tablename__ = "threat_risks"
 
-    id = Column(String, primary_key=True)  # UUID string
+    id = Column(Integer, primary_key=True, index=True)  # UUID string
 
     organization_id = Column(
         PG_UUID(as_uuid=True),
