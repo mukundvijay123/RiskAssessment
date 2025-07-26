@@ -2,6 +2,7 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from .tables import Base
 
 # Supabase credentials
 DB_USER = "postgres.oucktnjljscewmgoukzd"
@@ -18,7 +19,7 @@ DATABASE_URL = (
 
 # Create engine with connection pool
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-
+Base.metadata.create_all(bind=engine)
 # Session factory
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
