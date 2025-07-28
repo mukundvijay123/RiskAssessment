@@ -91,3 +91,26 @@ class ThreatRisk(Base):
     impact_justification = Column(Text, nullable=False)
     threat_justification = Column(Text, nullable=False)
     vulnerability_justification = Column(Text, nullable=False)
+
+class SiteRiskMitigation(Base):
+    __tablename__ = "site_risk_mitigation"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    org_id = Column(PG_UUID(as_uuid=True), ForeignKey("organization.id", ondelete="CASCADE"), nullable=False)
+    data = Column(JSONB, nullable=False)
+
+
+class SiteRiskAssessment(Base):
+    __tablename__ = "site_risk_assessment"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    org_id = Column(PG_UUID(as_uuid=True), ForeignKey("organization.id", ondelete="CASCADE"), nullable=False)
+    data = Column(JSONB, nullable=False)
+
+
+class ProcessThreats(Base):
+    __tablename__ = "process_threats"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    org_id = Column(PG_UUID(as_uuid=True), ForeignKey("organization.id", ondelete="CASCADE"), nullable=False)
+    data = Column(JSONB, nullable=False)
