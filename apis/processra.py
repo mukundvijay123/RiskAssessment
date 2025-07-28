@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List
 from .models import ProcessRiskInput,CriticalProcessInfo,ProcessInput  # or wherever your class is defined
+from .tables import ProcessThreats
 from .db import get_db
 
 processrouter = APIRouter(prefix="/processRiskAssessment")
@@ -39,8 +40,12 @@ def extract_process_info(data: ProcessRiskInput):
 
     return response.json()
 
+
+processrouter = APIRouter()
+
 @processrouter.post("/v2/getThreats")
 def extract_process_info(data: ProcessInput, db: Session = Depends(get_db)):
+    # Step 1: Query process metadata
     query = """
         SELECT DISTINCT ON (p.id)
             p.name AS process_name,
@@ -66,7 +71,7 @@ def extract_process_info(data: ProcessInput, db: Session = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Process data not found")
 
-    # Map to ProcessRiskInput
+    # Step 2: Map to ProcessRiskInput (exclude organization_id)
     process_risk_input = ProcessRiskInput(
         processName=row["process_name"],
         department=row["department"],
@@ -79,12 +84,16 @@ def extract_process_info(data: ProcessInput, db: Session = Depends(get_db)):
         businessContext=row["business_context"] or ""
     )
 
+    # Step 3: Call external threat generation API
     try:
         response = requests.post(
-            "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/generate-threats",
-            json=process_risk_input.model_dump(by_alias=True),
-            timeout=30
-        )
+        "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/generate-threats",
+        json=data.model_dump(
+        by_alias=True,
+        exclude={"organization_id", "demo"}
+    ),
+    timeout=30
+)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Threat API call failed: {str(e)}")
 
@@ -94,7 +103,19 @@ def extract_process_info(data: ProcessInput, db: Session = Depends(get_db)):
             detail=f"Threat generation failed: {response.text}"
         )
 
-    return response.json()
+    threats_data = response.json()
+
+    # Step 4: Save to DB if demo=True and organization_id is present
+    if data.demo and data.organization_id:
+        db_record = ProcessThreats(
+            org_id=data.organization_id,
+            data=threats_data
+        )
+        db.add(db_record)
+        db.commit()
+
+    return threats_data
+
 
 @processrouter.get("/critical-processes", response_model=List[CriticalProcessInfo])
 def get_critical_processes(db: Session = Depends(get_db)):
