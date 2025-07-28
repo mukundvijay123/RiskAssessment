@@ -1,9 +1,13 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter,HTTPException,Depends
 import json
 import os
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+import uuid
 from typing import List
 from .models import RiskRequestModel,SiteRiskSafetyInput,GeneratedRiskOutput
+from .db import get_db
+from .tables import SiteRiskAssessment,SiteRiskMitigation
 import requests
 siterouter = APIRouter(prefix="/siteRiskAssessment")
 
@@ -17,51 +21,137 @@ def get_questions():
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
     
-
 @siterouter.post("/riskMitigation")
-def generate_risk_mitigation(risk_items: RiskRequestModel):
+def generate_risk_mitigation(risk_items: RiskRequestModel, db: Session = Depends(get_db)):
+    if risk_items.organization_id is None and risk_items.demo:
+        # Case: demo — send to external API and save with random UUID
+        payload = risk_items.model_dump(by_alias=True, exclude={"organization_id", "demo"})
+
+        try:
+            response = requests.post(
+                "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/risk-mitigation",
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            response_data = response.json()
+        except requests.RequestException as e:
+            raise HTTPException(status_code=502, detail=f"External API failed: {str(e)}")
+        except ValueError:
+            raise HTTPException(status_code=500, detail="Invalid JSON from mitigation API")
+
+        
+
+        return response_data
+
+    elif not risk_items.demo and risk_items.organization_id:
+        # Case: real request — try DB first
+        record = db.query(SiteRiskMitigation).filter(
+            SiteRiskMitigation.org_id == risk_items.organization_id
+        ).first()
+
+        if record:
+            return record.data
+
+        # Not found, call API
+        payload = risk_items.model_dump(by_alias=True, exclude={"demo"})
+        try:
+            response = requests.post(
+                "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/risk-mitigation",
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            response_data = response.json()
+        except requests.RequestException as e:
+            raise HTTPException(status_code=502, detail=f"External API failed: {str(e)}")
+        except ValueError:
+            raise HTTPException(status_code=500, detail="Invalid JSON from mitigation API")
+
+        # Save to DB
+        new_record = SiteRiskMitigation(
+            org_id=risk_items.organization_id,
+            data=response_data
+        )
+        db.add(new_record)
+        db.commit()
+
+        return response_data
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid input. Use demo=True without organization_id or demo=False with valid organization_id."
+        )
 
 
-
-    response = requests.post(
-        "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/risk-mitigation",
-        json=risk_items.model_dump(by_alias=True)
-    )
-    a=response.status_code
-    if a != 200:
-        return {
-            "error": "Failed to get threat mitigation response",
-            "status_code": response.status_code,
-            "details": response.text
-        }
-
-    return response.json()
 
 
 @siterouter.post("/site-risk-assessment")
-def do_sam(input: SiteRiskSafetyInput):
+def do_sam(input: SiteRiskSafetyInput, db: Session = Depends(get_db)):
     """
-    Sends site risk safety input to external risk mitigation API and returns the response.
+    Handles site risk assessment:
+    - If demo=True and organization_id is None:
+        Send to external API (exclude org_id/demo), save to DB with random UUID, return result
+    - If demo=False and organization_id is provided:
+        Check DB → if not found, send to API, save to DB, return
     """
-    try:
-        response = requests.post(
-            "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/site-risk-mitigation",
-            json=input.model_dump(by_alias=True),
-            timeout=30
-        )
-    except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Error connecting to mitigation API: {str(e)}")
+    if input.organization_id is None and input.demo:
+        # Case: demo with no org_id — call API, save, return
+        payload = input.model_dump(by_alias=True, exclude={"demo", "organization_id"})
 
-    if response.status_code != 200:
+        try:
+            response = requests.post(
+                "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/site-risk-mitigation",
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            response_data = response.json()
+        except requests.RequestException as e:
+            raise HTTPException(status_code=502, detail=f"Error connecting to mitigation API: {str(e)}")
+        except ValueError:
+            raise HTTPException(status_code=500, detail="Invalid JSON received from external API")
+
+       
+        
+
+        return response_data
+
+    elif not input.demo and input.organization_id:
+        # Case: real org request — try DB first
+        record = db.query(SiteRiskAssessment).filter(SiteRiskAssessment.org_id == input.organization_id).first()
+        if record:
+            return record.data
+
+        # Not found — call API, save, return
+        payload = input.model_dump(by_alias=True, exclude={"demo"})
+        try:
+            response = requests.post(
+                "https://ey-catalyst-rvce-ey-catalyst.hf.space/api/site-risk-mitigation",
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            response_data = response.json()
+        except requests.RequestException as e:
+            raise HTTPException(status_code=502, detail=f"Error connecting to mitigation API: {str(e)}")
+        except ValueError:
+            raise HTTPException(status_code=500, detail="Invalid JSON received from external API")
+
+        # Save to DB
+        new_record = SiteRiskAssessment(
+            org_id=input.organization_id,
+            data=response_data
+        )
+        db.add(new_record)
+        db.commit()
+
+        return response_data
+
+    else:
+        # Invalid input case
         raise HTTPException(
-            status_code=response.status_code,
-            detail={
-                "error": "Failed to get threat mitigation response",
-                "response": response.text
-            }
+            status_code=400,
+            detail="Invalid input. Use demo=True with no organization_id, or demo=False with a valid organization_id."
         )
-
-    try:
-        return response.json()
-    except ValueError:
-        raise HTTPException(status_code=500, detail="Invalid JSON received from external API")
