@@ -4,6 +4,17 @@ from uuid import UUID
 from datetime import datetime
 
 
+
+'''
+Models for Dashboard
+'''
+class AssessmentSummaryRequest(BaseModel):
+    organization_id:UUID
+    assessment_types: List[str]
+    organization_context: Optional[str] = ""
+
+
+
 '''
 Models for threat RA
 '''
@@ -133,9 +144,13 @@ class RiskQuestion(BaseModel):
     user_answer: str
 
 class RiskRequestModel(BaseModel):
+    organization_id:Optional[UUID]
+    demo:Optional[bool]
     responses: List[RiskQuestion]
 
 class SiteRiskSafetyInput(BaseModel):
+    organization_id:Optional[UUID]
+    demo:Optional[bool]
     riskCategory: str
     controlQuestion: str
     complianceStatus: str
@@ -234,6 +249,8 @@ class CriticalProcessInfo(BaseModel):
         orm_mode = True
 
 class ProcessInput(BaseModel):
+    organization_id:Optional[UUID]
+    demo:Optional[bool]
     process_id: UUID
     process_name: str
     process_owner: Optional[str]
