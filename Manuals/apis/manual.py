@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from .db import get_db 
 from io import BytesIO
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4 
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from .models import SubDeptRequest
